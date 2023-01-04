@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Page</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="bootstrap.min.css">
+</head>
+<body>
+    <script src="bootstrap.min.js"></script>
+    <script src="index.js"></script>
+    <script src="SignIn.js" type="module"></script>
+    <script src="Firebase.js"></script>
+
+    <div class="container">
+
+        <div class="slider">
+            <div id="carouselExampleIndicators" class="carousel slider" data-bs-ride="true"> </div>
+            <div class="carousel-indicators">
+                <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active"
+                    aria-current="true" aria-label="Slide 1"></button>
+                <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1"
+                    aria-label="Slide 2"></button>
+                <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2"
+                    aria-label="Slide 3"></button>
+
+            </div>
+            <div id="carouselExampleControls" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <img src="/images/slider1.jpg" class="d-block w-100" alt="...">
+                    </div>
+                    <div class="carousel-item">
+                        <img src="/images/slider2.jpg" class="d-block w-100" alt="olmadı">
+                    </div>
+                    <div class="carousel-item">
+                        <img src="/images/slider3.jpg" class="d-block w-100" alt="...">
+                    </div>
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleControls"
+                    data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleControls"
+                    data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+            </div>
+        </div>
+
+
+
+        <div class="body">
+
+                <div class="SignInForm">
+                    <form id="loginForm">
+                        <h1>Sign In</h1>
+                        <input type="email" placeholder="Email" class="txt" id="email">
+                        <input type="password" placeholder="Password" class="txt" id="password">
+                        <span href="#" id="forgotpassword">(Email: alpa1903@hotmail.com / Password: alpa1903 )</span>
+            
+                        <input type="button" value="Login" class="btn" id="login" name="login">
+                    </form>
+
+                </div>
+
+            <div class="upload">
+                <label>Image name:</label> <input type="text" id="namebox"> <label id="extlab"></label> <br><br>
+                <img id="myimg"> <label id="upprogress"></label> <br><br>
+            
+            
+                <button id="selbtn">Select Image</button>
+                <button id="upbtn">Upload Image</button>
+                <button id="downbtn">Retrieve Image</button>
+
+            </div>
+
+        </div>
+
+
+
+    </div>
+
+<!--****************************************************---UPLOAD-----*********************************************************-->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBl2I9g4Cwmj_5RlMzD_vNfjTyYQ-o02Jk",
+            authDomain: "alparentacar-3ea85.firebaseapp.com",
+            databaseURL: "https://alparentacar-3ea85-default-rtdb.firebaseio.com",
+            projectId: "alparentacar-3ea85",
+            storageBucket: "alparentacar-3ea85.appspot.com",
+            messagingSenderId: "428757016586",
+            appId: "1:428757016586:web:7dc54286adae9276717ff3"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+
+        import { getStorage, ref as sRef, uploadBytesResumable, getDownloadURL }
+            from "https://www.gstatic.com/firebasejs/9.1.3/firebase-storage.js"
+
+        import { getDatabase, ref, set, child, get, update, remove }
+            from "https://www.gstatic.com/firebasejs/9.1.3/firebase-database.js"
+        const database = getDatabase();
+
+
+
+
+        //----------------------------variables and references--------------------------------//
+        var files = [];
+        var reader = new FileReader();
+
+        var namebox = document.getElementById('namebox');
+        var extlab = document.getElementById('extlab');
+        var myimg = document.getElementById('myimg');
+        var upprogress = document.getElementById('upprogress');
+        var selbtn = document.getElementById('selbtn');
+        var upbtn = document.getElementById('upbtn');
+        var downbtn = document.getElementById('downbtn');
+
+        var input = document.createElement('input');
+        input.type = 'file';
+
+
+        input.onchange = e => {
+            files = e.target.files;
+            var extention = GetFileExt(files[0]);
+            var name = GetFileName(files[0]);
+
+            namebox.value = name;
+            extlab.innerHTML = extention;
+
+            reader.readAsDataURL(files[0]);
+        }
+
+        reader.onload = function () {
+            myimg.src = reader.result;
+        }
+        //-----------------------------------selection----------------//
+
+        selbtn.onclick = function () {
+            input.click();
+        }
+
+
+        function GetFileExt(file) {
+            var temp = file.name.split('.');
+            var ext = temp.slice((temp.length - 1), (temp.length));
+            return '.' + ext[0];
+        }
+
+        function GetFileName(file) {
+            var temp = file.name.split('.');
+            var fname = temp.slice(0, -1).join('.');
+            return fname;
+        }
+
+        //---------------------------------------upload process-------------///
+
+        async function UploadProcess() {
+
+            var ImgToUpload = files[0];
+            var ImgName = namebox.value + extlab.innerHTML;
+
+            if (!ValidateName()) {
+                alert('Name connot contain "." , "#" ,"$" ,"["or "]"');
+                return;
+            }
+
+            const metaData = {
+                contentType: ImgToUpload.type
+            }
+
+            const storage = getStorage();
+
+            const storageRef = sRef(storage, "Images/" + ImgName);
+
+            const UploadTask = uploadBytesResumable(storageRef, ImgToUpload, metaData);
+
+
+            UploadTask.on('state-changed', (snapshot) => {
+                var progess = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                upprogress.innerHTML = "Upload" + progess + "%";
+                if (progess == 100) {
+                    alert("Uploaded");
+                }
+            },
+
+                (error) => {
+                    alert("error:image not uploaded");
+                },
+                () => {
+                    getDownloadURL(UploadTask.snapshot.ref).then((downloadURL) => {
+                        var name = namebox.value;
+                        var ext = extlab.innerHTML;
+
+                        set(ref(database, "ImagesLinks/" + name), {
+                            ImgName: (name + ext),
+                            ImgUrl: downloadURL
+                        });
+                    });
+                }
+            );
+        }
+
+        //----------------------------functions for realtime database---------------//
+
+
+        function GetUrlfromRealtimeDB() {
+            var name = namebox.value;
+            var dbRef = ref(database);
+
+            get(child(dbRef, "ImagesLinks/" + name)).then((snapshot) => {
+                if (snapshot.exists()) {
+                    myimg.src = snapshot.val().ImgUrl;
+                }
+            })
+        }
+
+        //can't contain "." , "#" ,"$" ,"["or "]"
+
+        function ValidateName() {
+            var regex = /[\.#$\[\]]/
+            return !(regex.test(namebox.value));
+        }
+
+
+        upbtn.onclick = UploadProcess;
+        downbtn.onclick = GetUrlfromRealtimeDB;
+
+    </script>
+
+
+
+</body>
+</html>
